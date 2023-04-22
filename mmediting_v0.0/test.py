@@ -2,7 +2,7 @@ import torch, torchvision
 import mmedit
 from mmcv import Config
 
-cfg = Config.fromfile('msrresnet.py')
+cfg = Config.fromfile('srgan.py')
 # print(f'Config:\n{cfg.pretty_text}')
 
 import os.path as osp
@@ -44,10 +44,10 @@ data_loader = build_dataloader(
 model = build_model(
         cfg.model, train_cfg=cfg.train_cfg, test_cfg=cfg.test_cfg).cuda()
 
-load_checkpoint(model, './work_dirs/msrresnet/iter_300000.pth', map_location='cuda')
+load_checkpoint(model, './work_dirs/srgan/iter_40000.pth', map_location='cuda')
 
 model = MMDataParallel(model, device_ids=[0])
 
 outputs = single_gpu_test(model, data_loader, save_image=True,
-                          save_path='./test/msrresnet/results')
+                          save_path='./test/srgan/results')
 

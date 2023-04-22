@@ -130,16 +130,16 @@ data = dict(
         filename_tmpl='{}'))
 
 # optimizer
-optimizers = dict(generator=dict(type='Adam', lr=5e-4, betas=(0.9, 0.999)))
+optimizers = dict(generator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)))
 
 # learning policy
-total_iters = 300000
+total_iters = 30000
 
 lr_config = dict(
     policy='CosineRestart',
     by_epoch=False,
-    periods=[150000, 150000],
-    restart_weights=[1, 1],
+    periods=[30000],
+    restart_weights=[1],
     min_lr=1e-7)
 
 # lr_config = dict(policy='Step', by_epoch=False, step=[20000], gamma=0.5)

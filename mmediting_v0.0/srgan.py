@@ -153,11 +153,11 @@ optimizers = dict(
     discriminator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)))
 
 # learning policy
-total_iters = 50000
+total_iters = 40000
 lr_config = dict(
     policy='Step',
     by_epoch=False,
-    step=[5000, 10000, 20000, 30000, 40000],
+    step=[5000, 10000, 20000, 30000],
     gamma=0.5)
 
 checkpoint_config = dict(interval=5000, save_optimizer=True, by_epoch=False)
@@ -175,6 +175,6 @@ visual_config = None
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
 work_dir = f'./work_dirs/{exp_name}'
-load_from = './work_dirs/msrresnet/iter_300000.pth'
+load_from = './work_dirs/msrresnet/iter_30000.pth'
 resume_from = None
 workflow = [('train', 1)]
