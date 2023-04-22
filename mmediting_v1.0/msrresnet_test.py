@@ -9,7 +9,7 @@ save_dir = './work_dirs/'
 
 scale = 4
 
-load_from = './work_dirs/srresnet/iter_30000.pth'
+load_from = './work_dirs/srresnet/checkpoint_best.pth'
 
 # DistributedDataParallel
 model_wrapper_cfg = dict(type='MMSeparateDistributedDataParallel')

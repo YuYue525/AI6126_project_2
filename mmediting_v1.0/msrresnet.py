@@ -3,13 +3,13 @@
 
 _base_ = './mmediting/configs/_base_/default_runtime.py'
 
-experiment_name = 'srresnet_2'
+experiment_name = 'srresnet'
 work_dir = f'./work_dirs/{experiment_name}'
 save_dir = './work_dirs/'
 
 scale = 4
 
-load_from = './work_dirs/srresnet/iter_30000.pth'
+load_from = './work_dirs/srresnet/iter_120000.pth'
 
 # DistributedDataParallel
 model_wrapper_cfg = dict(type='MMSeparateDistributedDataParallel')
