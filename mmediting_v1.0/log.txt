@@ -1,0 +1,1384 @@
+2023/04/21 22:06:11 - mmengine - INFO - 
+------------------------------------------------------------
+System environment:
+    sys.platform: linux
+    Python: 3.10.10 (main, Mar 21 2023, 18:45:11) [GCC 11.2.0]
+    CUDA available: True
+    numpy_random_seed: 970518019
+    GPU 0: NVIDIA A40
+    CUDA_HOME: /usr/local/cuda
+    NVCC: Cuda compilation tools, release 11.8, V11.8.89
+    GCC: gcc (GCC) 11.2.0
+    PyTorch: 2.0.0+cu117
+    PyTorch compiling details: PyTorch built with:
+  - GCC 9.3
+  - C++ Version: 201703
+  - Intel(R) oneAPI Math Kernel Library Version 2022.2-Product Build 20220804 for Intel(R) 64 architecture applications
+  - Intel(R) MKL-DNN v2.7.3 (Git Hash 6dbeffbae1f23cbbeae17adb7b5b13f1f37c080e)
+  - OpenMP 201511 (a.k.a. OpenMP 4.5)
+  - LAPACK is enabled (usually provided by MKL)
+  - NNPACK is enabled
+  - CPU capability usage: AVX2
+  - CUDA Runtime 11.7
+  - NVCC architecture flags: -gencode;arch=compute_37,code=sm_37;-gencode;arch=compute_50,code=sm_50;-gencode;arch=compute_60,code=sm_60;-gencode;arch=compute_70,code=sm_70;-gencode;arch=compute_75,code=sm_75;-gencode;arch=compute_80,code=sm_80;-gencode;arch=compute_86,code=sm_86
+  - CuDNN 8.5
+  - Magma 2.6.1
+  - Build settings: BLAS_INFO=mkl, BUILD_TYPE=Release, CUDA_VERSION=11.7, CUDNN_VERSION=8.5.0, CXX_COMPILER=/opt/rh/devtoolset-9/root/usr/bin/c++, CXX_FLAGS= -D_GLIBCXX_USE_CXX11_ABI=0 -fabi-version=11 -Wno-deprecated -fvisibility-inlines-hidden -DUSE_PTHREADPOOL -DNDEBUG -DUSE_KINETO -DLIBKINETO_NOROCTRACER -DUSE_FBGEMM -DUSE_QNNPACK -DUSE_PYTORCH_QNNPACK -DUSE_XNNPACK -DSYMBOLICATE_MOBILE_DEBUG_HANDLE -O2 -fPIC -Wall -Wextra -Werror=return-type -Werror=non-virtual-dtor -Werror=bool-operation -Wnarrowing -Wno-missing-field-initializers -Wno-type-limits -Wno-array-bounds -Wno-unknown-pragmas -Wunused-local-typedefs -Wno-unused-parameter -Wno-unused-function -Wno-unused-result -Wno-strict-overflow -Wno-strict-aliasing -Wno-error=deprecated-declarations -Wno-stringop-overflow -Wno-psabi -Wno-error=pedantic -Wno-error=redundant-decls -Wno-error=old-style-cast -fdiagnostics-color=always -faligned-new -Wno-unused-but-set-variable -Wno-maybe-uninitialized -fno-math-errno -fno-trapping-math -Werror=format -Werror=cast-function-type -Wno-stringop-overflow, LAPACK_INFO=mkl, PERF_WITH_AVX=1, PERF_WITH_AVX2=1, PERF_WITH_AVX512=1, TORCH_DISABLE_GPU_ASSERTS=ON, TORCH_VERSION=2.0.0, USE_CUDA=ON, USE_CUDNN=ON, USE_EXCEPTION_PTR=1, USE_GFLAGS=OFF, USE_GLOG=OFF, USE_MKL=ON, USE_MKLDNN=ON, USE_MPI=OFF, USE_NCCL=1, USE_NNPACK=ON, USE_OPENMP=ON, USE_ROCM=OFF, 
+
+    TorchVision: 0.15.1+cu117
+    OpenCV: 4.7.0
+    MMEngine: 0.7.2
+
+Runtime environment:
+    cudnn_benchmark: False
+    mp_cfg: {'mp_start_method': 'fork', 'opencv_num_threads': 4}
+    dist_cfg: {'backend': 'nccl'}
+    seed: None
+    Distributed launcher: none
+    Distributed training: False
+    GPU number: 1
+------------------------------------------------------------
+
+2023/04/21 22:06:11 - mmengine - INFO - Config:
+default_scope = 'mmedit'
+save_dir = './work_dirs/'
+default_hooks = dict(
+    timer=dict(type='IterTimerHook'),
+    logger=dict(type='LoggerHook', interval=100),
+    param_scheduler=dict(type='ParamSchedulerHook'),
+    checkpoint=dict(
+        type='CheckpointHook',
+        interval=5000,
+        out_dir='./work_dirs/',
+        by_epoch=False,
+        max_keep_ckpts=10,
+        save_best='PSNR',
+        rule='greater',
+        save_optimizer=True),
+    sampler_seed=dict(type='DistSamplerSeedHook'))
+env_cfg = dict(
+    cudnn_benchmark=False,
+    mp_cfg=dict(mp_start_method='fork', opencv_num_threads=4),
+    dist_cfg=dict(backend='nccl'))
+log_level = 'INFO'
+log_processor = dict(type='EditLogProcessor', window_size=100, by_epoch=False)
+load_from = './work_dirs/iter_120000.pth'
+resume = False
+vis_backends = [dict(type='LocalVisBackend')]
+visualizer = dict(
+    type='ConcatImageVisualizer',
+    vis_backends=[dict(type='LocalVisBackend')],
+    fn_key='gt_path',
+    img_keys=['gt_img', 'input', 'pred_img'],
+    bgr2rgb=True)
+custom_hooks = [
+    dict(type='BasicVisualizationHook', interval=1),
+    dict(
+        type='ExponentialMovingAverageHook',
+        module_keys='generator_ema',
+        interval=1,
+        interp_cfg=dict(momentum=0.001))
+]
+experiment_name = 'srresnet'
+work_dir = './work_dirs/srresnet'
+scale = 4
+model_wrapper_cfg = dict(type='MMSeparateDistributedDataParallel')
+model = dict(
+    type='BaseEditModel',
+    generator=dict(
+        type='MSRResNet',
+        in_channels=3,
+        out_channels=3,
+        mid_channels=64,
+        num_blocks=24,
+        upscale_factor=4),
+    pixel_loss=dict(type='L1Loss', loss_weight=1.0, reduction='mean'),
+    train_cfg=dict(),
+    test_cfg=dict(),
+    data_preprocessor=dict(
+        type='EditDataPreprocessor',
+        mean=[0.0, 0.0, 0.0],
+        std=[255.0, 255.0, 255.0]))
+train_pipeline = [
+    dict(type='LoadImageFromFile', key='gt', channel_order='rgb'),
+    dict(type='CopyValues', src_keys=['gt'], dst_keys=['img']),
+    dict(
+        type='RandomBlur',
+        params=dict(
+            kernel_size=[41],
+            kernel_list=['iso', 'aniso'],
+            kernel_prob=[0.5, 0.5],
+            sigma_x=[0.2, 5],
+            sigma_y=[0.2, 5],
+            rotate_angle=[-3.1416, 3.1416]),
+        keys=['img']),
+    dict(
+        type='RandomResize',
+        params=dict(
+            resize_mode_prob=[0, 1, 0],
+            resize_scale=[0.0625, 1],
+            resize_opt=['bilinear', 'area', 'bicubic'],
+            resize_prob=[
+                0.3333333333333333, 0.3333333333333333, 0.3333333333333333
+            ]),
+        keys=['img']),
+    dict(
+        type='RandomNoise',
+        params=dict(
+            noise_type=['gaussian'],
+            noise_prob=[1],
+            gaussian_sigma=[0, 25],
+            gaussian_gray_noise_prob=0),
+        keys=['img']),
+    dict(
+        type='RandomJPEGCompression',
+        params=dict(quality=[50, 95]),
+        keys=['img']),
+    dict(
+        type='RandomResize',
+        params=dict(
+            target_size=(512, 512),
+            resize_opt=['bilinear', 'area', 'bicubic'],
+            resize_prob=[
+                0.3333333333333333, 0.3333333333333333, 0.3333333333333333
+            ]),
+        keys=['img']),
+    dict(
+        type='RandomResize',
+        params=dict(
+            target_size=(128, 128), resize_opt=['area'], resize_prob=[1]),
+        keys=['img']),
+    dict(
+        type='Flip',
+        keys=['img', 'gt'],
+        flip_ratio=0.5,
+        direction='horizontal'),
+    dict(type='PackEditInputs')
+]
+val_pipeline = [
+    dict(type='LoadImageFromFile', key='img', channel_order='rgb'),
+    dict(type='LoadImageFromFile', key='gt', channel_order='rgb'),
+    dict(type='PackEditInputs')
+]
+dataset_type = 'BasicImageDataset'
+train_dataloader = dict(
+    num_workers=2,
+    batch_size=12,
+    persistent_workers=False,
+    sampler=dict(type='InfiniteSampler', shuffle=True),
+    dataset=dict(
+        type='BasicImageDataset',
+        metainfo=dict(dataset_type='ffhq', task_name='face_sr'),
+        data_root='./data/FFHQ/train/GT',
+        data_prefix=dict(gt='', img=''),
+        pipeline=[
+            dict(type='LoadImageFromFile', key='gt', channel_order='rgb'),
+            dict(type='CopyValues', src_keys=['gt'], dst_keys=['img']),
+            dict(
+                type='RandomBlur',
+                params=dict(
+                    kernel_size=[41],
+                    kernel_list=['iso', 'aniso'],
+                    kernel_prob=[0.5, 0.5],
+                    sigma_x=[0.2, 5],
+                    sigma_y=[0.2, 5],
+                    rotate_angle=[-3.1416, 3.1416]),
+                keys=['img']),
+            dict(
+                type='RandomResize',
+                params=dict(
+                    resize_mode_prob=[0, 1, 0],
+                    resize_scale=[0.0625, 1],
+                    resize_opt=['bilinear', 'area', 'bicubic'],
+                    resize_prob=[
+                        0.3333333333333333, 0.3333333333333333,
+                        0.3333333333333333
+                    ]),
+                keys=['img']),
+            dict(
+                type='RandomNoise',
+                params=dict(
+                    noise_type=['gaussian'],
+                    noise_prob=[1],
+                    gaussian_sigma=[0, 25],
+                    gaussian_gray_noise_prob=0),
+                keys=['img']),
+            dict(
+                type='RandomJPEGCompression',
+                params=dict(quality=[50, 95]),
+                keys=['img']),
+            dict(
+                type='RandomResize',
+                params=dict(
+                    target_size=(512, 512),
+                    resize_opt=['bilinear', 'area', 'bicubic'],
+                    resize_prob=[
+                        0.3333333333333333, 0.3333333333333333,
+                        0.3333333333333333
+                    ]),
+                keys=['img']),
+            dict(
+                type='RandomResize',
+                params=dict(
+                    target_size=(128, 128),
+                    resize_opt=['area'],
+                    resize_prob=[1]),
+                keys=['img']),
+            dict(
+                type='Flip',
+                keys=['img', 'gt'],
+                flip_ratio=0.5,
+                direction='horizontal'),
+            dict(type='PackEditInputs')
+        ]))
+val_dataloader = dict(
+    num_workers=2,
+    persistent_workers=False,
+    drop_last=False,
+    sampler=dict(type='DefaultSampler', shuffle=False),
+    dataset=dict(
+        type='BasicImageDataset',
+        metainfo=dict(dataset_type='ffhq', task_name='face_sr'),
+        data_root='./data/FFHQ/val/',
+        data_prefix=dict(img='LQ', gt='GT'),
+        filename_tmpl=dict(img='{}', gt='{}'),
+        pipeline=[
+            dict(type='LoadImageFromFile', key='img', channel_order='rgb'),
+            dict(type='LoadImageFromFile', key='gt', channel_order='rgb'),
+            dict(type='PackEditInputs')
+        ]))
+test_dataloader = dict(
+    num_workers=2,
+    persistent_workers=False,
+    drop_last=False,
+    sampler=dict(type='DefaultSampler', shuffle=False),
+    dataset=dict(
+        type='BasicImageDataset',
+        metainfo=dict(dataset_type='ffhq', task_name='face_sr'),
+        data_root='./data/FFHQ/val/',
+        data_prefix=dict(img='LQ', gt='GT'),
+        filename_tmpl=dict(img='{}', gt='{}'),
+        pipeline=[
+            dict(type='LoadImageFromFile', key='img', channel_order='rgb'),
+            dict(type='LoadImageFromFile', key='gt', channel_order='rgb'),
+            dict(type='PackEditInputs')
+        ]))
+val_evaluator = dict(
+    type='EditEvaluator', metrics=[dict(type='PSNR'),
+                                   dict(type='SSIM')])
+test_evaluator = dict(
+    type='EditEvaluator', metrics=[dict(type='PSNR'),
+                                   dict(type='SSIM')])
+train_cfg = dict(type='IterBasedTrainLoop', max_iters=30000, val_interval=5000)
+val_cfg = dict(type='EditValLoop')
+test_cfg = dict(type='EditTestLoop')
+optim_wrapper = dict(
+    constructor='DefaultOptimWrapperConstructor',
+    type='OptimWrapper',
+    optimizer=dict(type='Adam', lr=1e-05, betas=(0.9, 0.999)))
+param_scheduler = dict(
+    type='CosineRestartLR',
+    by_epoch=False,
+    periods=[30000],
+    restart_weights=[1],
+    eta_min=1e-09)
+launcher = 'none'
+
+2023/04/21 22:06:14 - mmengine - INFO - Distributed training is not used, all SyncBatchNorm (SyncBN) layers in the model will be automatically reverted to BatchNormXd layers if they are used.
+2023/04/21 22:06:14 - mmengine - INFO - Hooks will be executed in the following order:
+before_run:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) ExponentialMovingAverageHook       
+(BELOW_NORMAL) LoggerHook                         
+ -------------------- 
+before_train:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) IterTimerHook                      
+(VERY_LOW    ) CheckpointHook                     
+ -------------------- 
+before_train_epoch:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) IterTimerHook                      
+(NORMAL      ) DistSamplerSeedHook                
+ -------------------- 
+before_train_iter:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) IterTimerHook                      
+ -------------------- 
+after_train_iter:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) IterTimerHook                      
+(NORMAL      ) BasicVisualizationHook             
+(NORMAL      ) ExponentialMovingAverageHook       
+(BELOW_NORMAL) LoggerHook                         
+(LOW         ) ParamSchedulerHook                 
+(VERY_LOW    ) CheckpointHook                     
+ -------------------- 
+after_train_epoch:
+(NORMAL      ) IterTimerHook                      
+(LOW         ) ParamSchedulerHook                 
+(VERY_LOW    ) CheckpointHook                     
+ -------------------- 
+before_val_epoch:
+(NORMAL      ) IterTimerHook                      
+ -------------------- 
+before_val_iter:
+(NORMAL      ) IterTimerHook                      
+ -------------------- 
+after_val_iter:
+(NORMAL      ) IterTimerHook                      
+(NORMAL      ) BasicVisualizationHook             
+(BELOW_NORMAL) LoggerHook                         
+ -------------------- 
+after_val_epoch:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) IterTimerHook                      
+(BELOW_NORMAL) LoggerHook                         
+(LOW         ) ParamSchedulerHook                 
+(VERY_LOW    ) CheckpointHook                     
+ -------------------- 
+after_train:
+(VERY_LOW    ) CheckpointHook                     
+ -------------------- 
+before_test_epoch:
+(NORMAL      ) IterTimerHook                      
+ -------------------- 
+before_test_iter:
+(NORMAL      ) IterTimerHook                      
+ -------------------- 
+after_test_iter:
+(NORMAL      ) IterTimerHook                      
+(NORMAL      ) BasicVisualizationHook             
+(BELOW_NORMAL) LoggerHook                         
+ -------------------- 
+after_test_epoch:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) IterTimerHook                      
+(BELOW_NORMAL) LoggerHook                         
+ -------------------- 
+after_run:
+(BELOW_NORMAL) LoggerHook                         
+ -------------------- 
+2023/04/21 22:06:15 - mmengine - INFO - Working directory: ./work_dirs/srresnet
+2023/04/21 22:06:15 - mmengine - INFO - Log directiry: /home/msai/ywang150/AI6126_project_2/work_dirs/srresnet/20230421_220611
+2023/04/21 22:06:15 - mmengine - WARNING - ffhq is not a meta file, simply parsed as meta information
+2023/04/21 22:06:15 - mmengine - WARNING - face_sr is not a meta file, simply parsed as meta information
+2023/04/21 22:06:17 - mmengine - WARNING - The prefix is not set in metric class PSNR.
+2023/04/21 22:06:17 - mmengine - WARNING - The prefix is not set in metric class SSIM.
+Name of parameter - Initialization information
+
+generator.conv_first.weight - torch.Size([64, 3, 3, 3]): 
+Initialized by user-defined `init_weights` in MSRResNet  
+
+generator.conv_first.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.0.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.0.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.0.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.0.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.1.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.1.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.1.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.1.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.2.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.2.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.2.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.2.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.3.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.3.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.3.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.3.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.4.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.4.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.4.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.4.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.5.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.5.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.5.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.5.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.6.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.6.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.6.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.6.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.7.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.7.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.7.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.7.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.8.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.8.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.8.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.8.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.9.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.9.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.9.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.9.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.10.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.10.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.10.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.10.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.11.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.11.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.11.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.11.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.12.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.12.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.12.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.12.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.13.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.13.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.13.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.13.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.14.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.14.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.14.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.14.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.15.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.15.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.15.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.15.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.16.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.16.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.16.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.16.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.17.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.17.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.17.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.17.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.18.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.18.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.18.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.18.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.19.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.19.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.19.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.19.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.20.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.20.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.20.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.20.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.21.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.21.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.21.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.21.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.22.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.22.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.22.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.22.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.23.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.23.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.23.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.trunk_net.23.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.upsample1.upsample_conv.weight - torch.Size([256, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.upsample1.upsample_conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.upsample2.upsample_conv.weight - torch.Size([256, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.upsample2.upsample_conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.conv_hr.weight - torch.Size([64, 64, 3, 3]): 
+Initialized by user-defined `init_weights` in MSRResNet  
+
+generator.conv_hr.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator.conv_last.weight - torch.Size([3, 64, 3, 3]): 
+Initialized by user-defined `init_weights` in MSRResNet  
+
+generator.conv_last.bias - torch.Size([3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.conv_first.weight - torch.Size([64, 3, 3, 3]): 
+Initialized by user-defined `init_weights` in MSRResNet  
+
+generator_ema.conv_first.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.0.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.0.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.0.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.0.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.1.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.1.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.1.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.1.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.2.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.2.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.2.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.2.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.3.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.3.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.3.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.3.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.4.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.4.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.4.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.4.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.5.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.5.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.5.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.5.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.6.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.6.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.6.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.6.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.7.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.7.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.7.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.7.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.8.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.8.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.8.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.8.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.9.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.9.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.9.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.9.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.10.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.10.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.10.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.10.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.11.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.11.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.11.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.11.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.12.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.12.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.12.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.12.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.13.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.13.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.13.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.13.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.14.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.14.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.14.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.14.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.15.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.15.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.15.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.15.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.16.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.16.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.16.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.16.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.17.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.17.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.17.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.17.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.18.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.18.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.18.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.18.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.19.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.19.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.19.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.19.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.20.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.20.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.20.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.20.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.21.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.21.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.21.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.21.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.22.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.22.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.22.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.22.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.23.conv1.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.23.conv1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.23.conv2.weight - torch.Size([64, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.trunk_net.23.conv2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.upsample1.upsample_conv.weight - torch.Size([256, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.upsample1.upsample_conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.upsample2.upsample_conv.weight - torch.Size([256, 64, 3, 3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.upsample2.upsample_conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.conv_hr.weight - torch.Size([64, 64, 3, 3]): 
+Initialized by user-defined `init_weights` in MSRResNet  
+
+generator_ema.conv_hr.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+
+generator_ema.conv_last.weight - torch.Size([3, 64, 3, 3]): 
+Initialized by user-defined `init_weights` in MSRResNet  
+
+generator_ema.conv_last.bias - torch.Size([3]): 
+The value is the same before and after calling `init_weights` of BaseEditModel  
+2023/04/21 22:06:18 - mmengine - INFO - Load checkpoint from ./work_dirs/iter_120000.pth
+2023/04/21 22:06:18 - mmengine - WARNING - "FileClient" will be deprecated in future. Please use io functions in https://mmengine.readthedocs.io/en/latest/api/fileio.html#file-io
+2023/04/21 22:06:18 - mmengine - WARNING - "HardDiskBackend" is the alias of "LocalBackend" and the former will be deprecated in future.
+2023/04/21 22:06:18 - mmengine - INFO - Checkpoints will be saved to ./work_dirs/srresnet.
+2023/04/21 22:07:27 - mmengine - INFO - Iter(train) [  100/30000]  lr: 9.9997e-06  eta: 5:41:09  time: 0.6846  data_time: 0.3707  memory: 6456  loss: 0.0230
+2023/04/21 22:08:34 - mmengine - INFO - Iter(train) [  200/30000]  lr: 9.9989e-06  eta: 5:36:10  time: 0.6691  data_time: 0.3826  memory: 6456  loss: 0.0229
+2023/04/21 22:09:41 - mmengine - INFO - Iter(train) [  300/30000]  lr: 9.9975e-06  eta: 5:33:56  time: 0.6702  data_time: 0.3859  memory: 6456  loss: 0.0231
+2023/04/21 22:10:48 - mmengine - INFO - Iter(train) [  400/30000]  lr: 9.9956e-06  eta: 5:33:17  time: 0.6784  data_time: 0.3927  memory: 6456  loss: 0.0229
+2023/04/21 22:10:59 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/21 22:11:55 - mmengine - INFO - Iter(train) [  500/30000]  lr: 9.9932e-06  eta: 5:30:55  time: 0.6630  data_time: 0.3788  memory: 6456  loss: 0.0231
+2023/04/21 22:13:01 - mmengine - INFO - Iter(train) [  600/30000]  lr: 9.9902e-06  eta: 5:29:06  time: 0.6647  data_time: 0.3815  memory: 6456  loss: 0.0230
+2023/04/21 22:14:08 - mmengine - INFO - Iter(train) [  700/30000]  lr: 9.9866e-06  eta: 5:28:00  time: 0.6719  data_time: 0.3868  memory: 6456  loss: 0.0227
+2023/04/21 22:15:15 - mmengine - INFO - Iter(train) [  800/30000]  lr: 9.9825e-06  eta: 5:26:37  time: 0.6674  data_time: 0.3829  memory: 6456  loss: 0.0232
+2023/04/21 22:16:21 - mmengine - INFO - Iter(train) [  900/30000]  lr: 9.9779e-06  eta: 5:25:04  time: 0.6629  data_time: 0.3766  memory: 6456  loss: 0.0234
+2023/04/21 22:17:29 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/21 22:17:29 - mmengine - INFO - Iter(train) [ 1000/30000]  lr: 9.9727e-06  eta: 5:24:05  time: 0.6733  data_time: 0.3844  memory: 6456  loss: 0.0232
+2023/04/21 22:18:36 - mmengine - INFO - Iter(train) [ 1100/30000]  lr: 9.9669e-06  eta: 5:22:51  time: 0.6677  data_time: 0.3835  memory: 6456  loss: 0.0230
+2023/04/21 22:19:44 - mmengine - INFO - Iter(train) [ 1200/30000]  lr: 9.9606e-06  eta: 5:22:13  time: 0.6823  data_time: 0.3958  memory: 6456  loss: 0.0224
+2023/04/21 22:20:51 - mmengine - INFO - Iter(train) [ 1300/30000]  lr: 9.9538e-06  eta: 5:21:01  time: 0.6694  data_time: 0.3839  memory: 6456  loss: 0.0230
+2023/04/21 22:21:58 - mmengine - INFO - Iter(train) [ 1400/30000]  lr: 9.9464e-06  eta: 5:20:00  time: 0.6741  data_time: 0.3858  memory: 6456  loss: 0.0231
+2023/04/21 22:23:05 - mmengine - INFO - Iter(train) [ 1500/30000]  lr: 9.9385e-06  eta: 5:18:45  time: 0.6669  data_time: 0.3807  memory: 6456  loss: 0.0227
+2023/04/21 22:24:11 - mmengine - INFO - Iter(train) [ 1600/30000]  lr: 9.9301e-06  eta: 5:17:25  time: 0.6639  data_time: 0.3799  memory: 6456  loss: 0.0229
+2023/04/21 22:25:18 - mmengine - INFO - Iter(train) [ 1700/30000]  lr: 9.9211e-06  eta: 5:16:07  time: 0.6642  data_time: 0.3791  memory: 6456  loss: 0.0231
+2023/04/21 22:26:25 - mmengine - INFO - Iter(train) [ 1800/30000]  lr: 9.9115e-06  eta: 5:15:11  time: 0.6773  data_time: 0.3898  memory: 6456  loss: 0.0229
+2023/04/21 22:27:32 - mmengine - INFO - Iter(train) [ 1900/30000]  lr: 9.9015e-06  eta: 5:13:54  time: 0.6636  data_time: 0.3787  memory: 6456  loss: 0.0225
+2023/04/21 22:28:38 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/21 22:28:38 - mmengine - INFO - Iter(train) [ 2000/30000]  lr: 9.8909e-06  eta: 5:12:40  time: 0.6657  data_time: 0.3778  memory: 6456  loss: 0.0228
+2023/04/21 22:29:47 - mmengine - INFO - Iter(train) [ 2100/30000]  lr: 9.8797e-06  eta: 5:11:52  time: 0.6840  data_time: 0.4001  memory: 6456  loss: 0.0230
+2023/04/21 22:30:54 - mmengine - INFO - Iter(train) [ 2200/30000]  lr: 9.8680e-06  eta: 5:10:49  time: 0.6740  data_time: 0.3867  memory: 6456  loss: 0.0230
+2023/04/21 22:32:03 - mmengine - INFO - Iter(train) [ 2300/30000]  lr: 9.8558e-06  eta: 5:09:58  time: 0.6842  data_time: 0.3997  memory: 6456  loss: 0.0230
+2023/04/21 22:33:09 - mmengine - INFO - Iter(train) [ 2400/30000]  lr: 9.8431e-06  eta: 5:08:46  time: 0.6671  data_time: 0.3833  memory: 6456  loss: 0.0228
+2023/04/21 22:34:18 - mmengine - INFO - Iter(train) [ 2500/30000]  lr: 9.8298e-06  eta: 5:07:57  time: 0.6875  data_time: 0.4042  memory: 6456  loss: 0.0228
+2023/04/21 22:35:26 - mmengine - INFO - Iter(train) [ 2600/30000]  lr: 9.8160e-06  eta: 5:06:59  time: 0.6809  data_time: 0.3940  memory: 6456  loss: 0.0227
+2023/04/21 22:36:34 - mmengine - INFO - Iter(train) [ 2700/30000]  lr: 9.8016e-06  eta: 5:05:54  time: 0.6742  data_time: 0.3866  memory: 6456  loss: 0.0232
+2023/04/21 22:37:42 - mmengine - INFO - Iter(train) [ 2800/30000]  lr: 9.7868e-06  eta: 5:04:56  time: 0.6827  data_time: 0.3976  memory: 6456  loss: 0.0227
+2023/04/21 22:38:49 - mmengine - INFO - Iter(train) [ 2900/30000]  lr: 9.7714e-06  eta: 5:03:51  time: 0.6748  data_time: 0.3863  memory: 6456  loss: 0.0231
+2023/04/21 22:39:56 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/21 22:39:56 - mmengine - INFO - Iter(train) [ 3000/30000]  lr: 9.7555e-06  eta: 5:02:41  time: 0.6690  data_time: 0.3836  memory: 6456  loss: 0.0232
+2023/04/21 22:41:04 - mmengine - INFO - Iter(train) [ 3100/30000]  lr: 9.7390e-06  eta: 5:01:33  time: 0.6726  data_time: 0.3851  memory: 6456  loss: 0.0229
+2023/04/21 22:42:11 - mmengine - INFO - Iter(train) [ 3200/30000]  lr: 9.7221e-06  eta: 5:00:30  time: 0.6772  data_time: 0.3887  memory: 6456  loss: 0.0226
+2023/04/21 22:43:20 - mmengine - INFO - Iter(train) [ 3300/30000]  lr: 9.7046e-06  eta: 4:59:32  time: 0.6843  data_time: 0.3967  memory: 6456  loss: 0.0229
+2023/04/21 22:44:27 - mmengine - INFO - Iter(train) [ 3400/30000]  lr: 9.6866e-06  eta: 4:58:25  time: 0.6743  data_time: 0.3920  memory: 6456  loss: 0.0232
+2023/04/21 22:45:33 - mmengine - INFO - Iter(train) [ 3500/30000]  lr: 9.6681e-06  eta: 4:57:10  time: 0.6627  data_time: 0.3773  memory: 6456  loss: 0.0229
+2023/04/21 22:46:40 - mmengine - INFO - Iter(train) [ 3600/30000]  lr: 9.6491e-06  eta: 4:56:02  time: 0.6711  data_time: 0.3852  memory: 6456  loss: 0.0226
+2023/04/21 22:47:47 - mmengine - INFO - Iter(train) [ 3700/30000]  lr: 9.6296e-06  eta: 4:54:51  time: 0.6678  data_time: 0.3811  memory: 6456  loss: 0.0230
+2023/04/21 22:48:54 - mmengine - INFO - Iter(train) [ 3800/30000]  lr: 9.6096e-06  eta: 4:53:37  time: 0.6638  data_time: 0.3809  memory: 6456  loss: 0.0231
+2023/04/21 22:50:01 - mmengine - INFO - Iter(train) [ 3900/30000]  lr: 9.5890e-06  eta: 4:52:33  time: 0.6762  data_time: 0.3906  memory: 6456  loss: 0.0227
+2023/04/21 22:51:07 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/21 22:51:07 - mmengine - INFO - Iter(train) [ 4000/30000]  lr: 9.5680e-06  eta: 4:51:18  time: 0.6608  data_time: 0.3772  memory: 6456  loss: 0.0231
+2023/04/21 22:52:16 - mmengine - INFO - Iter(train) [ 4100/30000]  lr: 9.5464e-06  eta: 4:50:17  time: 0.6827  data_time: 0.3970  memory: 6456  loss: 0.0226
+2023/04/21 22:53:23 - mmengine - INFO - Iter(train) [ 4200/30000]  lr: 9.5244e-06  eta: 4:49:09  time: 0.6703  data_time: 0.3837  memory: 6456  loss: 0.0227
+2023/04/21 22:54:29 - mmengine - INFO - Iter(train) [ 4300/30000]  lr: 9.5019e-06  eta: 4:47:58  time: 0.6672  data_time: 0.3815  memory: 6456  loss: 0.0231
+2023/04/21 22:55:36 - mmengine - INFO - Iter(train) [ 4400/30000]  lr: 9.4788e-06  eta: 4:46:44  time: 0.6608  data_time: 0.3751  memory: 6456  loss: 0.0232
+2023/04/21 22:56:41 - mmengine - INFO - Iter(train) [ 4500/30000]  lr: 9.4553e-06  eta: 4:45:28  time: 0.6563  data_time: 0.3712  memory: 6456  loss: 0.0225
+2023/04/21 22:57:49 - mmengine - INFO - Iter(train) [ 4600/30000]  lr: 9.4313e-06  eta: 4:44:23  time: 0.6749  data_time: 0.3904  memory: 6456  loss: 0.0227
+2023/04/21 22:58:56 - mmengine - INFO - Iter(train) [ 4700/30000]  lr: 9.4068e-06  eta: 4:43:15  time: 0.6700  data_time: 0.3865  memory: 6456  loss: 0.0231
+2023/04/21 23:00:02 - mmengine - INFO - Iter(train) [ 4800/30000]  lr: 9.3818e-06  eta: 4:42:02  time: 0.6605  data_time: 0.3798  memory: 6456  loss: 0.0230
+2023/04/21 23:01:09 - mmengine - INFO - Iter(train) [ 4900/30000]  lr: 9.3564e-06  eta: 4:40:56  time: 0.6744  data_time: 0.3876  memory: 6456  loss: 0.0231
+2023/04/21 23:02:15 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/21 23:02:15 - mmengine - INFO - Iter(train) [ 5000/30000]  lr: 9.3305e-06  eta: 4:39:42  time: 0.6591  data_time: 0.3719  memory: 6456  loss: 0.0228
+2023/04/21 23:02:15 - mmengine - INFO - Saving checkpoint at 5000 iterations
+2023/04/21 23:02:34 - mmengine - INFO - Iter(val) [100/400]    eta: 0:00:53  time: 0.1773  data_time: 0.0445  memory: 235  
+2023/04/21 23:02:51 - mmengine - INFO - Iter(val) [200/400]    eta: 0:00:34  time: 0.1652  data_time: 0.0375  memory: 235  
+2023/04/21 23:03:07 - mmengine - INFO - Iter(val) [300/400]    eta: 0:00:16  time: 0.1643  data_time: 0.0379  memory: 235  
+2023/04/21 23:03:24 - mmengine - INFO - Iter(val) [400/400]    eta: 0:00:00  time: 0.1645  data_time: 0.0380  memory: 235  
+2023/04/21 23:03:24 - mmengine - INFO - Iter(val) [400/400]    PSNR: 29.7127  SSIM: 0.8037  data_time: 0.0380  time: 0.1645
+2023/04/21 23:03:24 - mmengine - INFO - The best checkpoint with 29.7127 PSNR at 5000 iter is saved to best_PSNR_iter_5000.pth.
+2023/04/21 23:04:29 - mmengine - INFO - Iter(train) [ 5100/30000]  lr: 9.3040e-06  eta: 4:38:29  time: 0.6575  data_time: 0.3714  memory: 6456  loss: 0.0235
+2023/04/21 23:05:36 - mmengine - INFO - Iter(train) [ 5200/30000]  lr: 9.2772e-06  eta: 4:37:19  time: 0.6652  data_time: 0.3803  memory: 6456  loss: 0.0226
+2023/04/21 23:06:42 - mmengine - INFO - Iter(train) [ 5300/30000]  lr: 9.2498e-06  eta: 4:36:09  time: 0.6663  data_time: 0.3810  memory: 6456  loss: 0.0231
+2023/04/21 23:07:50 - mmengine - INFO - Iter(train) [ 5400/30000]  lr: 9.2220e-06  eta: 4:35:03  time: 0.6726  data_time: 0.3934  memory: 6456  loss: 0.0228
+2023/04/21 23:08:57 - mmengine - INFO - Iter(train) [ 5500/30000]  lr: 9.1937e-06  eta: 4:33:59  time: 0.6771  data_time: 0.3915  memory: 6456  loss: 0.0228
+2023/04/21 23:10:04 - mmengine - INFO - Iter(train) [ 5600/30000]  lr: 9.1650e-06  eta: 4:32:48  time: 0.6627  data_time: 0.3759  memory: 6456  loss: 0.0232
+2023/04/21 23:11:10 - mmengine - INFO - Iter(train) [ 5700/30000]  lr: 9.1358e-06  eta: 4:31:39  time: 0.6656  data_time: 0.3781  memory: 6456  loss: 0.0227
+2023/04/21 23:12:17 - mmengine - INFO - Iter(train) [ 5800/30000]  lr: 9.1061e-06  eta: 4:30:29  time: 0.6650  data_time: 0.3815  memory: 6456  loss: 0.0230
+2023/04/21 23:13:22 - mmengine - INFO - Iter(train) [ 5900/30000]  lr: 9.0760e-06  eta: 4:29:16  time: 0.6556  data_time: 0.3712  memory: 6456  loss: 0.0231
+2023/04/21 23:14:29 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/21 23:14:29 - mmengine - INFO - Iter(train) [ 6000/30000]  lr: 9.0455e-06  eta: 4:28:07  time: 0.6647  data_time: 0.3833  memory: 6456  loss: 0.0228
+2023/04/21 23:15:35 - mmengine - INFO - Iter(train) [ 6100/30000]  lr: 9.0145e-06  eta: 4:26:58  time: 0.6655  data_time: 0.3832  memory: 6456  loss: 0.0229
+2023/04/21 23:16:43 - mmengine - INFO - Iter(train) [ 6200/30000]  lr: 8.9831e-06  eta: 4:25:52  time: 0.6738  data_time: 0.3868  memory: 6456  loss: 0.0229
+2023/04/21 23:17:50 - mmengine - INFO - Iter(train) [ 6300/30000]  lr: 8.9512e-06  eta: 4:24:44  time: 0.6682  data_time: 0.3820  memory: 6456  loss: 0.0229
+2023/04/21 23:18:57 - mmengine - INFO - Iter(train) [ 6400/30000]  lr: 8.9189e-06  eta: 4:23:37  time: 0.6699  data_time: 0.3850  memory: 6456  loss: 0.0230
+2023/04/21 23:20:03 - mmengine - INFO - Iter(train) [ 6500/30000]  lr: 8.8862e-06  eta: 4:22:27  time: 0.6623  data_time: 0.3814  memory: 6456  loss: 0.0229
+2023/04/21 23:21:10 - mmengine - INFO - Iter(train) [ 6600/30000]  lr: 8.8530e-06  eta: 4:21:19  time: 0.6677  data_time: 0.3856  memory: 6456  loss: 0.0230
+2023/04/21 23:22:16 - mmengine - INFO - Iter(train) [ 6700/30000]  lr: 8.8194e-06  eta: 4:20:12  time: 0.6688  data_time: 0.3837  memory: 6456  loss: 0.0227
+2023/04/21 23:23:23 - mmengine - INFO - Iter(train) [ 6800/30000]  lr: 8.7854e-06  eta: 4:19:05  time: 0.6695  data_time: 0.3837  memory: 6456  loss: 0.0231
+2023/04/21 23:24:31 - mmengine - INFO - Iter(train) [ 6900/30000]  lr: 8.7510e-06  eta: 4:17:58  time: 0.6711  data_time: 0.3869  memory: 6456  loss: 0.0227
+2023/04/21 23:25:37 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/21 23:25:37 - mmengine - INFO - Iter(train) [ 7000/30000]  lr: 8.7162e-06  eta: 4:16:50  time: 0.6660  data_time: 0.3835  memory: 6456  loss: 0.0226
+2023/04/21 23:26:44 - mmengine - INFO - Iter(train) [ 7100/30000]  lr: 8.6810e-06  eta: 4:15:42  time: 0.6672  data_time: 0.3809  memory: 6456  loss: 0.0229
+2023/04/21 23:27:50 - mmengine - INFO - Iter(train) [ 7200/30000]  lr: 8.6453e-06  eta: 4:14:34  time: 0.6663  data_time: 0.3780  memory: 6456  loss: 0.0230
+2023/04/21 23:28:57 - mmengine - INFO - Iter(train) [ 7300/30000]  lr: 8.6093e-06  eta: 4:13:26  time: 0.6687  data_time: 0.3825  memory: 6456  loss: 0.0229
+2023/04/21 23:30:03 - mmengine - INFO - Iter(train) [ 7400/30000]  lr: 8.5729e-06  eta: 4:12:16  time: 0.6582  data_time: 0.3719  memory: 6456  loss: 0.0230
+2023/04/21 23:31:10 - mmengine - INFO - Iter(train) [ 7500/30000]  lr: 8.5361e-06  eta: 4:11:10  time: 0.6722  data_time: 0.3872  memory: 6456  loss: 0.0228
+2023/04/21 23:32:18 - mmengine - INFO - Iter(train) [ 7600/30000]  lr: 8.4988e-06  eta: 4:10:04  time: 0.6741  data_time: 0.3879  memory: 6456  loss: 0.0228
+2023/04/21 23:33:24 - mmengine - INFO - Iter(train) [ 7700/30000]  lr: 8.4612e-06  eta: 4:08:56  time: 0.6660  data_time: 0.3801  memory: 6456  loss: 0.0230
+2023/04/21 23:34:32 - mmengine - INFO - Iter(train) [ 7800/30000]  lr: 8.4233e-06  eta: 4:07:50  time: 0.6746  data_time: 0.3895  memory: 6456  loss: 0.0229
+2023/04/21 23:35:37 - mmengine - INFO - Iter(train) [ 7900/30000]  lr: 8.3849e-06  eta: 4:06:39  time: 0.6544  data_time: 0.3702  memory: 6456  loss: 0.0231
+2023/04/21 23:36:44 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/21 23:36:44 - mmengine - INFO - Iter(train) [ 8000/30000]  lr: 8.3462e-06  eta: 4:05:31  time: 0.6675  data_time: 0.3834  memory: 6456  loss: 0.0229
+2023/04/21 23:37:51 - mmengine - INFO - Iter(train) [ 8100/30000]  lr: 8.3071e-06  eta: 4:04:25  time: 0.6733  data_time: 0.3868  memory: 6456  loss: 0.0226
+2023/04/21 23:38:59 - mmengine - INFO - Iter(train) [ 8200/30000]  lr: 8.2677e-06  eta: 4:03:21  time: 0.6779  data_time: 0.3929  memory: 6456  loss: 0.0232
+2023/04/21 23:40:06 - mmengine - INFO - Iter(train) [ 8300/30000]  lr: 8.2279e-06  eta: 4:02:12  time: 0.6637  data_time: 0.3782  memory: 6456  loss: 0.0231
+2023/04/21 23:41:12 - mmengine - INFO - Iter(train) [ 8400/30000]  lr: 8.1877e-06  eta: 4:01:04  time: 0.6642  data_time: 0.3769  memory: 6456  loss: 0.0227
+2023/04/21 23:42:19 - mmengine - INFO - Iter(train) [ 8500/30000]  lr: 8.1472e-06  eta: 3:59:57  time: 0.6712  data_time: 0.3898  memory: 6456  loss: 0.0230
+2023/04/21 23:43:26 - mmengine - INFO - Iter(train) [ 8600/30000]  lr: 8.1063e-06  eta: 3:58:51  time: 0.6716  data_time: 0.3866  memory: 6456  loss: 0.0229
+2023/04/21 23:44:35 - mmengine - INFO - Iter(train) [ 8700/30000]  lr: 8.0651e-06  eta: 3:57:48  time: 0.6870  data_time: 0.4008  memory: 6456  loss: 0.0227
+2023/04/21 23:45:43 - mmengine - INFO - Iter(train) [ 8800/30000]  lr: 8.0236e-06  eta: 3:56:43  time: 0.6807  data_time: 0.3951  memory: 6456  loss: 0.0229
+2023/04/21 23:46:50 - mmengine - INFO - Iter(train) [ 8900/30000]  lr: 7.9817e-06  eta: 3:55:36  time: 0.6687  data_time: 0.3814  memory: 6456  loss: 0.0229
+2023/04/21 23:47:58 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/21 23:47:58 - mmengine - INFO - Iter(train) [ 9000/30000]  lr: 7.9396e-06  eta: 3:54:31  time: 0.6801  data_time: 0.3934  memory: 6456  loss: 0.0228
+2023/04/21 23:49:06 - mmengine - INFO - Iter(train) [ 9100/30000]  lr: 7.8970e-06  eta: 3:53:26  time: 0.6749  data_time: 0.3899  memory: 6456  loss: 0.0235
+2023/04/21 23:50:14 - mmengine - INFO - Iter(train) [ 9200/30000]  lr: 7.8542e-06  eta: 3:52:22  time: 0.6861  data_time: 0.3989  memory: 6456  loss: 0.0223
+2023/04/21 23:51:24 - mmengine - INFO - Iter(train) [ 9300/30000]  lr: 7.8111e-06  eta: 3:51:20  time: 0.6942  data_time: 0.4077  memory: 6456  loss: 0.0226
+2023/04/21 23:52:31 - mmengine - INFO - Iter(train) [ 9400/30000]  lr: 7.7676e-06  eta: 3:50:15  time: 0.6761  data_time: 0.3882  memory: 6456  loss: 0.0232
+2023/04/21 23:53:40 - mmengine - INFO - Iter(train) [ 9500/30000]  lr: 7.7239e-06  eta: 3:49:11  time: 0.6882  data_time: 0.4019  memory: 6456  loss: 0.0226
+2023/04/21 23:54:48 - mmengine - INFO - Iter(train) [ 9600/30000]  lr: 7.6798e-06  eta: 3:48:06  time: 0.6785  data_time: 0.3901  memory: 6456  loss: 0.0232
+2023/04/21 23:55:56 - mmengine - INFO - Iter(train) [ 9700/30000]  lr: 7.6355e-06  eta: 3:47:01  time: 0.6817  data_time: 0.3949  memory: 6456  loss: 0.0226
+2023/04/21 23:57:03 - mmengine - INFO - Iter(train) [ 9800/30000]  lr: 7.5908e-06  eta: 3:45:53  time: 0.6678  data_time: 0.3812  memory: 6456  loss: 0.0229
+2023/04/21 23:58:12 - mmengine - INFO - Iter(train) [ 9900/30000]  lr: 7.5459e-06  eta: 3:44:50  time: 0.6881  data_time: 0.4020  memory: 6456  loss: 0.0228
+2023/04/21 23:59:21 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/21 23:59:21 - mmengine - INFO - Iter(train) [10000/30000]  lr: 7.5007e-06  eta: 3:43:46  time: 0.6893  data_time: 0.4019  memory: 6456  loss: 0.0231
+2023/04/21 23:59:21 - mmengine - INFO - Saving checkpoint at 10000 iterations
+2023/04/21 23:59:40 - mmengine - INFO - Iter(val) [100/400]    eta: 0:00:55  time: 0.1846  data_time: 0.0468  memory: 235  
+2023/04/21 23:59:57 - mmengine - INFO - Iter(val) [200/400]    eta: 0:00:35  time: 0.1743  data_time: 0.0378  memory: 235  
+2023/04/22 00:00:15 - mmengine - INFO - Iter(val) [300/400]    eta: 0:00:17  time: 0.1780  data_time: 0.0385  memory: 235  
+2023/04/22 00:00:33 - mmengine - INFO - Iter(val) [400/400]    eta: 0:00:00  time: 0.1757  data_time: 0.0382  memory: 235  
+2023/04/22 00:00:33 - mmengine - INFO - Iter(val) [400/400]    PSNR: 29.7238  SSIM: 0.8041  data_time: 0.0382  time: 0.1757
+2023/04/22 00:00:33 - mmengine - INFO - The previous best checkpoint ./work_dirs/srresnet/best_PSNR_iter_5000.pth is removed
+2023/04/22 00:00:33 - mmengine - INFO - The best checkpoint with 29.7238 PSNR at 10000 iter is saved to best_PSNR_iter_10000.pth.
+2023/04/22 00:01:40 - mmengine - INFO - Iter(train) [10100/30000]  lr: 7.4552e-06  eta: 3:42:40  time: 0.6751  data_time: 0.3870  memory: 6456  loss: 0.0230
+2023/04/22 00:02:47 - mmengine - INFO - Iter(train) [10200/30000]  lr: 7.4095e-06  eta: 3:41:33  time: 0.6714  data_time: 0.3830  memory: 6456  loss: 0.0231
+2023/04/22 00:03:53 - mmengine - INFO - Iter(train) [10300/30000]  lr: 7.3635e-06  eta: 3:40:22  time: 0.6514  data_time: 0.3658  memory: 6456  loss: 0.0230
+2023/04/22 00:04:59 - mmengine - INFO - Iter(train) [10400/30000]  lr: 7.3172e-06  eta: 3:39:13  time: 0.6639  data_time: 0.3777  memory: 6456  loss: 0.0227
+2023/04/22 00:06:04 - mmengine - INFO - Iter(train) [10500/30000]  lr: 7.2707e-06  eta: 3:38:03  time: 0.6519  data_time: 0.3671  memory: 6456  loss: 0.0231
+2023/04/22 00:07:10 - mmengine - INFO - Iter(train) [10600/30000]  lr: 7.2239e-06  eta: 3:36:54  time: 0.6625  data_time: 0.3787  memory: 6456  loss: 0.0228
+2023/04/22 00:08:16 - mmengine - INFO - Iter(train) [10700/30000]  lr: 7.1769e-06  eta: 3:35:45  time: 0.6606  data_time: 0.3782  memory: 6456  loss: 0.0227
+2023/04/22 00:09:23 - mmengine - INFO - Iter(train) [10800/30000]  lr: 7.1297e-06  eta: 3:34:36  time: 0.6618  data_time: 0.3768  memory: 6456  loss: 0.0226
+2023/04/22 00:10:29 - mmengine - INFO - Iter(train) [10900/30000]  lr: 7.0822e-06  eta: 3:33:28  time: 0.6612  data_time: 0.3754  memory: 6456  loss: 0.0233
+2023/04/22 00:11:34 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/22 00:11:34 - mmengine - INFO - Iter(train) [11000/30000]  lr: 7.0345e-06  eta: 3:32:18  time: 0.6561  data_time: 0.3712  memory: 6456  loss: 0.0225
+2023/04/22 00:12:40 - mmengine - INFO - Iter(train) [11100/30000]  lr: 6.9865e-06  eta: 3:31:08  time: 0.6525  data_time: 0.3664  memory: 6456  loss: 0.0230
+2023/04/22 00:13:45 - mmengine - INFO - Iter(train) [11200/30000]  lr: 6.9384e-06  eta: 3:29:59  time: 0.6567  data_time: 0.3722  memory: 6456  loss: 0.0230
+2023/04/22 00:14:51 - mmengine - INFO - Iter(train) [11300/30000]  lr: 6.8900e-06  eta: 3:28:50  time: 0.6594  data_time: 0.3741  memory: 6456  loss: 0.0231
+2023/04/22 00:15:58 - mmengine - INFO - Iter(train) [11400/30000]  lr: 6.8414e-06  eta: 3:27:42  time: 0.6674  data_time: 0.3832  memory: 6456  loss: 0.0225
+2023/04/22 00:17:04 - mmengine - INFO - Iter(train) [11500/30000]  lr: 6.7926e-06  eta: 3:26:33  time: 0.6563  data_time: 0.3716  memory: 6456  loss: 0.0231
+2023/04/22 00:18:11 - mmengine - INFO - Iter(train) [11600/30000]  lr: 6.7437e-06  eta: 3:25:26  time: 0.6691  data_time: 0.3822  memory: 6456  loss: 0.0228
+2023/04/22 00:19:16 - mmengine - INFO - Iter(train) [11700/30000]  lr: 6.6945e-06  eta: 3:24:16  time: 0.6503  data_time: 0.3643  memory: 6456  loss: 0.0229
+2023/04/22 00:20:22 - mmengine - INFO - Iter(train) [11800/30000]  lr: 6.6452e-06  eta: 3:23:08  time: 0.6659  data_time: 0.3779  memory: 6456  loss: 0.0226
+2023/04/22 00:21:28 - mmengine - INFO - Iter(train) [11900/30000]  lr: 6.5956e-06  eta: 3:21:59  time: 0.6559  data_time: 0.3710  memory: 6456  loss: 0.0233
+2023/04/22 00:22:33 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/22 00:22:33 - mmengine - INFO - Iter(train) [12000/30000]  lr: 6.5459e-06  eta: 3:20:49  time: 0.6492  data_time: 0.3635  memory: 6456  loss: 0.0230
+2023/04/22 00:23:39 - mmengine - INFO - Iter(train) [12100/30000]  lr: 6.4961e-06  eta: 3:19:42  time: 0.6663  data_time: 0.3792  memory: 6456  loss: 0.0230
+2023/04/22 00:24:46 - mmengine - INFO - Iter(train) [12200/30000]  lr: 6.4460e-06  eta: 3:18:34  time: 0.6628  data_time: 0.3771  memory: 6456  loss: 0.0229
+2023/04/22 00:25:52 - mmengine - INFO - Iter(train) [12300/30000]  lr: 6.3958e-06  eta: 3:17:26  time: 0.6619  data_time: 0.3752  memory: 6456  loss: 0.0228
+2023/04/22 00:26:58 - mmengine - INFO - Iter(train) [12400/30000]  lr: 6.3455e-06  eta: 3:16:18  time: 0.6631  data_time: 0.3762  memory: 6456  loss: 0.0222
+2023/04/22 00:28:04 - mmengine - INFO - Iter(train) [12500/30000]  lr: 6.2950e-06  eta: 3:15:10  time: 0.6587  data_time: 0.3721  memory: 6456  loss: 0.0229
+2023/04/22 00:29:10 - mmengine - INFO - Iter(train) [12600/30000]  lr: 6.2443e-06  eta: 3:14:01  time: 0.6554  data_time: 0.3684  memory: 6456  loss: 0.0231
+2023/04/22 00:30:15 - mmengine - INFO - Iter(train) [12700/30000]  lr: 6.1936e-06  eta: 3:12:53  time: 0.6579  data_time: 0.3721  memory: 6456  loss: 0.0229
+2023/04/22 00:31:21 - mmengine - INFO - Iter(train) [12800/30000]  lr: 6.1426e-06  eta: 3:11:44  time: 0.6571  data_time: 0.3723  memory: 6456  loss: 0.0228
+2023/04/22 00:32:27 - mmengine - INFO - Iter(train) [12900/30000]  lr: 6.0916e-06  eta: 3:10:36  time: 0.6593  data_time: 0.3719  memory: 6456  loss: 0.0229
+2023/04/22 00:33:32 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/22 00:33:32 - mmengine - INFO - Iter(train) [13000/30000]  lr: 6.0405e-06  eta: 3:09:26  time: 0.6449  data_time: 0.3612  memory: 6456  loss: 0.0227
+2023/04/22 00:34:37 - mmengine - INFO - Iter(train) [13100/30000]  lr: 5.9892e-06  eta: 3:08:17  time: 0.6534  data_time: 0.3685  memory: 6456  loss: 0.0227
+2023/04/22 00:35:43 - mmengine - INFO - Iter(train) [13200/30000]  lr: 5.9378e-06  eta: 3:07:09  time: 0.6569  data_time: 0.3742  memory: 6456  loss: 0.0227
+2023/04/22 00:36:49 - mmengine - INFO - Iter(train) [13300/30000]  lr: 5.8864e-06  eta: 3:06:01  time: 0.6601  data_time: 0.3757  memory: 6456  loss: 0.0230
+2023/04/22 00:37:53 - mmengine - INFO - Iter(train) [13400/30000]  lr: 5.8348e-06  eta: 3:04:51  time: 0.6443  data_time: 0.3585  memory: 6456  loss: 0.0231
+2023/04/22 00:38:59 - mmengine - INFO - Iter(train) [13500/30000]  lr: 5.7831e-06  eta: 3:03:43  time: 0.6598  data_time: 0.3748  memory: 6456  loss: 0.0230
+2023/04/22 00:40:04 - mmengine - INFO - Iter(train) [13600/30000]  lr: 5.7314e-06  eta: 3:02:34  time: 0.6491  data_time: 0.3645  memory: 6456  loss: 0.0229
+2023/04/22 00:41:09 - mmengine - INFO - Iter(train) [13700/30000]  lr: 5.6795e-06  eta: 3:01:25  time: 0.6483  data_time: 0.3631  memory: 6456  loss: 0.0227
+2023/04/22 00:42:14 - mmengine - INFO - Iter(train) [13800/30000]  lr: 5.6276e-06  eta: 3:00:17  time: 0.6547  data_time: 0.3743  memory: 6456  loss: 0.0230
+2023/04/22 00:43:19 - mmengine - INFO - Iter(train) [13900/30000]  lr: 5.5756e-06  eta: 2:59:08  time: 0.6479  data_time: 0.3618  memory: 6456  loss: 0.0226
+2023/04/22 00:44:24 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/22 00:44:24 - mmengine - INFO - Iter(train) [14000/30000]  lr: 5.5236e-06  eta: 2:57:59  time: 0.6488  data_time: 0.3633  memory: 6456  loss: 0.0233
+2023/04/22 00:45:29 - mmengine - INFO - Iter(train) [14100/30000]  lr: 5.4715e-06  eta: 2:56:50  time: 0.6519  data_time: 0.3660  memory: 6456  loss: 0.0233
+2023/04/22 00:46:34 - mmengine - INFO - Iter(train) [14200/30000]  lr: 5.4194e-06  eta: 2:55:41  time: 0.6447  data_time: 0.3613  memory: 6456  loss: 0.0229
+2023/04/22 00:47:39 - mmengine - INFO - Iter(train) [14300/30000]  lr: 5.3672e-06  eta: 2:54:33  time: 0.6560  data_time: 0.3707  memory: 6456  loss: 0.0228
+2023/04/22 00:48:45 - mmengine - INFO - Iter(train) [14400/30000]  lr: 5.3149e-06  eta: 2:53:25  time: 0.6589  data_time: 0.3730  memory: 6456  loss: 0.0226
+2023/04/22 00:49:51 - mmengine - INFO - Iter(train) [14500/30000]  lr: 5.2627e-06  eta: 2:52:18  time: 0.6566  data_time: 0.3708  memory: 6456  loss: 0.0229
+2023/04/22 00:50:56 - mmengine - INFO - Iter(train) [14600/30000]  lr: 5.2104e-06  eta: 2:51:09  time: 0.6536  data_time: 0.3729  memory: 6456  loss: 0.0231
+2023/04/22 00:52:01 - mmengine - INFO - Iter(train) [14700/30000]  lr: 5.1581e-06  eta: 2:50:01  time: 0.6499  data_time: 0.3684  memory: 6456  loss: 0.0230
+2023/04/22 00:53:07 - mmengine - INFO - Iter(train) [14800/30000]  lr: 5.1057e-06  eta: 2:48:53  time: 0.6548  data_time: 0.3693  memory: 6456  loss: 0.0228
+2023/04/22 00:54:12 - mmengine - INFO - Iter(train) [14900/30000]  lr: 5.0534e-06  eta: 2:47:45  time: 0.6527  data_time: 0.3667  memory: 6456  loss: 0.0228
+2023/04/22 00:55:18 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/22 00:55:18 - mmengine - INFO - Iter(train) [15000/30000]  lr: 5.0010e-06  eta: 2:46:38  time: 0.6622  data_time: 0.3779  memory: 6456  loss: 0.0225
+2023/04/22 00:55:18 - mmengine - INFO - Saving checkpoint at 15000 iterations
+2023/04/22 00:55:36 - mmengine - INFO - Iter(val) [100/400]    eta: 0:00:50  time: 0.1690  data_time: 0.0452  memory: 235  
+2023/04/22 00:55:52 - mmengine - INFO - Iter(val) [200/400]    eta: 0:00:32  time: 0.1581  data_time: 0.0374  memory: 235  
+2023/04/22 00:56:08 - mmengine - INFO - Iter(val) [300/400]    eta: 0:00:16  time: 0.1590  data_time: 0.0377  memory: 235  
+2023/04/22 00:56:24 - mmengine - INFO - Iter(val) [400/400]    eta: 0:00:00  time: 0.1588  data_time: 0.0375  memory: 235  
+2023/04/22 00:56:24 - mmengine - INFO - Iter(val) [400/400]    PSNR: 29.7187  SSIM: 0.8040  data_time: 0.0375  time: 0.1588
+2023/04/22 00:57:28 - mmengine - INFO - Iter(train) [15100/30000]  lr: 4.9487e-06  eta: 2:45:28  time: 0.6354  data_time: 0.3522  memory: 6456  loss: 0.0231
+2023/04/22 00:58:33 - mmengine - INFO - Iter(train) [15200/30000]  lr: 4.8963e-06  eta: 2:44:20  time: 0.6515  data_time: 0.3668  memory: 6456  loss: 0.0232
+2023/04/22 00:59:38 - mmengine - INFO - Iter(train) [15300/30000]  lr: 4.8440e-06  eta: 2:43:12  time: 0.6521  data_time: 0.3666  memory: 6456  loss: 0.0227
+2023/04/22 01:00:42 - mmengine - INFO - Iter(train) [15400/30000]  lr: 4.7917e-06  eta: 2:42:04  time: 0.6453  data_time: 0.3597  memory: 6456  loss: 0.0230
+2023/04/22 01:01:48 - mmengine - INFO - Iter(train) [15500/30000]  lr: 4.7394e-06  eta: 2:40:56  time: 0.6558  data_time: 0.3708  memory: 6456  loss: 0.0231
+2023/04/22 01:02:53 - mmengine - INFO - Iter(train) [15600/30000]  lr: 4.6871e-06  eta: 2:39:48  time: 0.6520  data_time: 0.3677  memory: 6456  loss: 0.0226
+2023/04/22 01:03:59 - mmengine - INFO - Iter(train) [15700/30000]  lr: 4.6349e-06  eta: 2:38:40  time: 0.6528  data_time: 0.3705  memory: 6456  loss: 0.0225
+2023/04/22 01:05:04 - mmengine - INFO - Iter(train) [15800/30000]  lr: 4.5827e-06  eta: 2:37:33  time: 0.6527  data_time: 0.3686  memory: 6456  loss: 0.0230
+2023/04/22 01:06:09 - mmengine - INFO - Iter(train) [15900/30000]  lr: 4.5305e-06  eta: 2:36:24  time: 0.6480  data_time: 0.3641  memory: 6456  loss: 0.0229
+2023/04/22 01:07:14 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/22 01:07:14 - mmengine - INFO - Iter(train) [16000/30000]  lr: 4.4784e-06  eta: 2:35:17  time: 0.6572  data_time: 0.3718  memory: 6456  loss: 0.0225
+2023/04/22 01:08:21 - mmengine - INFO - Iter(train) [16100/30000]  lr: 4.4264e-06  eta: 2:34:11  time: 0.6655  data_time: 0.3802  memory: 6456  loss: 0.0230
+2023/04/22 01:09:27 - mmengine - INFO - Iter(train) [16200/30000]  lr: 4.3744e-06  eta: 2:33:04  time: 0.6628  data_time: 0.3760  memory: 6456  loss: 0.0225
+2023/04/22 01:10:32 - mmengine - INFO - Iter(train) [16300/30000]  lr: 4.3225e-06  eta: 2:31:56  time: 0.6518  data_time: 0.3661  memory: 6456  loss: 0.0228
+2023/04/22 01:11:37 - mmengine - INFO - Iter(train) [16400/30000]  lr: 4.2707e-06  eta: 2:30:48  time: 0.6493  data_time: 0.3615  memory: 6456  loss: 0.0230
+2023/04/22 01:12:43 - mmengine - INFO - Iter(train) [16500/30000]  lr: 4.2189e-06  eta: 2:29:41  time: 0.6590  data_time: 0.3737  memory: 6456  loss: 0.0228
+2023/04/22 01:13:49 - mmengine - INFO - Iter(train) [16600/30000]  lr: 4.1673e-06  eta: 2:28:34  time: 0.6580  data_time: 0.3733  memory: 6456  loss: 0.0229
+2023/04/22 01:14:55 - mmengine - INFO - Iter(train) [16700/30000]  lr: 4.1157e-06  eta: 2:27:27  time: 0.6550  data_time: 0.3676  memory: 6456  loss: 0.0228
+2023/04/22 01:16:00 - mmengine - INFO - Iter(train) [16800/30000]  lr: 4.0642e-06  eta: 2:26:19  time: 0.6495  data_time: 0.3658  memory: 6456  loss: 0.0229
+2023/04/22 01:17:05 - mmengine - INFO - Iter(train) [16900/30000]  lr: 4.0128e-06  eta: 2:25:12  time: 0.6555  data_time: 0.3713  memory: 6456  loss: 0.0229
+2023/04/22 01:18:11 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/22 01:18:11 - mmengine - INFO - Iter(train) [17000/30000]  lr: 3.9616e-06  eta: 2:24:05  time: 0.6609  data_time: 0.3729  memory: 6456  loss: 0.0232
+2023/04/22 01:19:16 - mmengine - INFO - Iter(train) [17100/30000]  lr: 3.9104e-06  eta: 2:22:57  time: 0.6487  data_time: 0.3639  memory: 6456  loss: 0.0232
+2023/04/22 01:20:22 - mmengine - INFO - Iter(train) [17200/30000]  lr: 3.8594e-06  eta: 2:21:50  time: 0.6632  data_time: 0.3795  memory: 6456  loss: 0.0225
+2023/04/22 01:21:29 - mmengine - INFO - Iter(train) [17300/30000]  lr: 3.8085e-06  eta: 2:20:44  time: 0.6681  data_time: 0.3818  memory: 6456  loss: 0.0229
+2023/04/22 01:22:34 - mmengine - INFO - Iter(train) [17400/30000]  lr: 3.7577e-06  eta: 2:19:37  time: 0.6523  data_time: 0.3651  memory: 6456  loss: 0.0228
+2023/04/22 01:23:41 - mmengine - INFO - Iter(train) [17500/30000]  lr: 3.7070e-06  eta: 2:18:30  time: 0.6617  data_time: 0.3805  memory: 6456  loss: 0.0227
+2023/04/22 01:24:46 - mmengine - INFO - Iter(train) [17600/30000]  lr: 3.6565e-06  eta: 2:17:23  time: 0.6580  data_time: 0.3719  memory: 6456  loss: 0.0227
+2023/04/22 01:25:53 - mmengine - INFO - Iter(train) [17700/30000]  lr: 3.6062e-06  eta: 2:16:17  time: 0.6654  data_time: 0.3810  memory: 6456  loss: 0.0235
+2023/04/22 01:26:58 - mmengine - INFO - Iter(train) [17800/30000]  lr: 3.5560e-06  eta: 2:15:09  time: 0.6529  data_time: 0.3694  memory: 6456  loss: 0.0227
+2023/04/22 01:28:05 - mmengine - INFO - Iter(train) [17900/30000]  lr: 3.5059e-06  eta: 2:14:03  time: 0.6627  data_time: 0.3808  memory: 6456  loss: 0.0232
+2023/04/22 01:29:11 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/22 01:29:11 - mmengine - INFO - Iter(train) [18000/30000]  lr: 3.4561e-06  eta: 2:12:56  time: 0.6655  data_time: 0.3823  memory: 6456  loss: 0.0226
+2023/04/22 01:30:18 - mmengine - INFO - Iter(train) [18100/30000]  lr: 3.4064e-06  eta: 2:11:50  time: 0.6696  data_time: 0.3830  memory: 6456  loss: 0.0231
+2023/04/22 01:31:23 - mmengine - INFO - Iter(train) [18200/30000]  lr: 3.3568e-06  eta: 2:10:43  time: 0.6496  data_time: 0.3637  memory: 6456  loss: 0.0230
+2023/04/22 01:32:28 - mmengine - INFO - Iter(train) [18300/30000]  lr: 3.3075e-06  eta: 2:09:35  time: 0.6478  data_time: 0.3635  memory: 6456  loss: 0.0233
+2023/04/22 01:33:33 - mmengine - INFO - Iter(train) [18400/30000]  lr: 3.2583e-06  eta: 2:08:28  time: 0.6517  data_time: 0.3664  memory: 6456  loss: 0.0227
+2023/04/22 01:34:39 - mmengine - INFO - Iter(train) [18500/30000]  lr: 3.2093e-06  eta: 2:07:21  time: 0.6582  data_time: 0.3700  memory: 6456  loss: 0.0228
+2023/04/22 01:35:44 - mmengine - INFO - Iter(train) [18600/30000]  lr: 3.1605e-06  eta: 2:06:14  time: 0.6546  data_time: 0.3724  memory: 6456  loss: 0.0232
+2023/04/22 01:36:50 - mmengine - INFO - Iter(train) [18700/30000]  lr: 3.1120e-06  eta: 2:05:07  time: 0.6530  data_time: 0.3690  memory: 6456  loss: 0.0230
+2023/04/22 01:37:55 - mmengine - INFO - Iter(train) [18800/30000]  lr: 3.0636e-06  eta: 2:04:00  time: 0.6557  data_time: 0.3751  memory: 6456  loss: 0.0228
+2023/04/22 01:39:02 - mmengine - INFO - Iter(train) [18900/30000]  lr: 3.0154e-06  eta: 2:02:53  time: 0.6622  data_time: 0.3779  memory: 6456  loss: 0.0225
+2023/04/22 01:40:06 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/22 01:40:06 - mmengine - INFO - Iter(train) [19000/30000]  lr: 2.9675e-06  eta: 2:01:46  time: 0.6490  data_time: 0.3612  memory: 6456  loss: 0.0227
+2023/04/22 01:41:13 - mmengine - INFO - Iter(train) [19100/30000]  lr: 2.9198e-06  eta: 2:00:40  time: 0.6678  data_time: 0.3815  memory: 6456  loss: 0.0228
+2023/04/22 01:42:19 - mmengine - INFO - Iter(train) [19200/30000]  lr: 2.8723e-06  eta: 1:59:33  time: 0.6555  data_time: 0.3716  memory: 6456  loss: 0.0231
+2023/04/22 01:43:24 - mmengine - INFO - Iter(train) [19300/30000]  lr: 2.8250e-06  eta: 1:58:26  time: 0.6530  data_time: 0.3701  memory: 6456  loss: 0.0228
+2023/04/22 01:44:30 - mmengine - INFO - Iter(train) [19400/30000]  lr: 2.7780e-06  eta: 1:57:19  time: 0.6590  data_time: 0.3731  memory: 6456  loss: 0.0227
+2023/04/22 01:45:35 - mmengine - INFO - Iter(train) [19500/30000]  lr: 2.7312e-06  eta: 1:56:12  time: 0.6522  data_time: 0.3643  memory: 6456  loss: 0.0230
+2023/04/22 01:46:40 - mmengine - INFO - Iter(train) [19600/30000]  lr: 2.6847e-06  eta: 1:55:05  time: 0.6512  data_time: 0.3681  memory: 6456  loss: 0.0233
+2023/04/22 01:47:46 - mmengine - INFO - Iter(train) [19700/30000]  lr: 2.6384e-06  eta: 1:53:58  time: 0.6583  data_time: 0.3705  memory: 6456  loss: 0.0229
+2023/04/22 01:48:51 - mmengine - INFO - Iter(train) [19800/30000]  lr: 2.5924e-06  eta: 1:52:51  time: 0.6482  data_time: 0.3624  memory: 6456  loss: 0.0230
+2023/04/22 01:49:56 - mmengine - INFO - Iter(train) [19900/30000]  lr: 2.5467e-06  eta: 1:51:44  time: 0.6543  data_time: 0.3673  memory: 6456  loss: 0.0234
+2023/04/22 01:51:02 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/22 01:51:02 - mmengine - INFO - Iter(train) [20000/30000]  lr: 2.5012e-06  eta: 1:50:37  time: 0.6519  data_time: 0.3657  memory: 6456  loss: 0.0226
+2023/04/22 01:51:02 - mmengine - INFO - Saving checkpoint at 20000 iterations
+2023/04/22 01:51:20 - mmengine - INFO - Iter(val) [100/400]    eta: 0:00:51  time: 0.1725  data_time: 0.0464  memory: 235  
+2023/04/22 01:51:36 - mmengine - INFO - Iter(val) [200/400]    eta: 0:00:33  time: 0.1582  data_time: 0.0373  memory: 235  
+2023/04/22 01:51:52 - mmengine - INFO - Iter(val) [300/400]    eta: 0:00:16  time: 0.1589  data_time: 0.0380  memory: 235  
+2023/04/22 01:52:08 - mmengine - INFO - Iter(val) [400/400]    eta: 0:00:00  time: 0.1579  data_time: 0.0375  memory: 235  
+2023/04/22 01:52:08 - mmengine - INFO - Iter(val) [400/400]    PSNR: 29.7284  SSIM: 0.8040  data_time: 0.0375  time: 0.1579
+2023/04/22 01:52:08 - mmengine - INFO - The previous best checkpoint ./work_dirs/srresnet/best_PSNR_iter_10000.pth is removed
+2023/04/22 01:52:08 - mmengine - INFO - The best checkpoint with 29.7284 PSNR at 20000 iter is saved to best_PSNR_iter_20000.pth.
+2023/04/22 01:53:12 - mmengine - INFO - Iter(train) [20100/30000]  lr: 2.4560e-06  eta: 1:49:30  time: 0.6440  data_time: 0.3576  memory: 6456  loss: 0.0231
+2023/04/22 01:54:19 - mmengine - INFO - Iter(train) [20200/30000]  lr: 2.4111e-06  eta: 1:48:24  time: 0.6698  data_time: 0.3846  memory: 6456  loss: 0.0228
+2023/04/22 01:55:25 - mmengine - INFO - Iter(train) [20300/30000]  lr: 2.3664e-06  eta: 1:47:17  time: 0.6598  data_time: 0.3748  memory: 6456  loss: 0.0226
+2023/04/22 01:56:30 - mmengine - INFO - Iter(train) [20400/30000]  lr: 2.3221e-06  eta: 1:46:10  time: 0.6525  data_time: 0.3718  memory: 6456  loss: 0.0227
+2023/04/22 01:57:36 - mmengine - INFO - Iter(train) [20500/30000]  lr: 2.2780e-06  eta: 1:45:04  time: 0.6599  data_time: 0.3752  memory: 6456  loss: 0.0230
+2023/04/22 01:58:41 - mmengine - INFO - Iter(train) [20600/30000]  lr: 2.2343e-06  eta: 1:43:57  time: 0.6505  data_time: 0.3658  memory: 6456  loss: 0.0229
+2023/04/22 01:59:47 - mmengine - INFO - Iter(train) [20700/30000]  lr: 2.1908e-06  eta: 1:42:50  time: 0.6549  data_time: 0.3688  memory: 6456  loss: 0.0229
+2023/04/22 02:00:54 - mmengine - INFO - Iter(train) [20800/30000]  lr: 2.1476e-06  eta: 1:41:44  time: 0.6665  data_time: 0.3818  memory: 6456  loss: 0.0223
+2023/04/22 02:01:59 - mmengine - INFO - Iter(train) [20900/30000]  lr: 2.1048e-06  eta: 1:40:37  time: 0.6564  data_time: 0.3703  memory: 6456  loss: 0.0231
+2023/04/22 02:03:06 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/22 02:03:06 - mmengine - INFO - Iter(train) [21000/30000]  lr: 2.0623e-06  eta: 1:39:31  time: 0.6645  data_time: 0.3812  memory: 6456  loss: 0.0229
+2023/04/22 02:04:10 - mmengine - INFO - Iter(train) [21100/30000]  lr: 2.0201e-06  eta: 1:38:24  time: 0.6469  data_time: 0.3633  memory: 6456  loss: 0.0231
+2023/04/22 02:05:17 - mmengine - INFO - Iter(train) [21200/30000]  lr: 1.9782e-06  eta: 1:37:18  time: 0.6622  data_time: 0.3782  memory: 6456  loss: 0.0227
+2023/04/22 02:06:22 - mmengine - INFO - Iter(train) [21300/30000]  lr: 1.9367e-06  eta: 1:36:11  time: 0.6557  data_time: 0.3737  memory: 6456  loss: 0.0232
+2023/04/22 02:07:29 - mmengine - INFO - Iter(train) [21400/30000]  lr: 1.8955e-06  eta: 1:35:05  time: 0.6646  data_time: 0.3776  memory: 6456  loss: 0.0226
+2023/04/22 02:08:35 - mmengine - INFO - Iter(train) [21500/30000]  lr: 1.8546e-06  eta: 1:33:58  time: 0.6584  data_time: 0.3721  memory: 6456  loss: 0.0226
+2023/04/22 02:09:41 - mmengine - INFO - Iter(train) [21600/30000]  lr: 1.8141e-06  eta: 1:32:52  time: 0.6623  data_time: 0.3788  memory: 6456  loss: 0.0226
+2023/04/22 02:10:46 - mmengine - INFO - Iter(train) [21700/30000]  lr: 1.7739e-06  eta: 1:31:45  time: 0.6500  data_time: 0.3630  memory: 6456  loss: 0.0231
+2023/04/22 02:11:53 - mmengine - INFO - Iter(train) [21800/30000]  lr: 1.7341e-06  eta: 1:30:39  time: 0.6693  data_time: 0.3837  memory: 6456  loss: 0.0227
+2023/04/22 02:12:58 - mmengine - INFO - Iter(train) [21900/30000]  lr: 1.6947e-06  eta: 1:29:32  time: 0.6491  data_time: 0.3661  memory: 6456  loss: 0.0235
+2023/04/22 02:14:03 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/22 02:14:03 - mmengine - INFO - Iter(train) [22000/30000]  lr: 1.6556e-06  eta: 1:28:25  time: 0.6547  data_time: 0.3708  memory: 6456  loss: 0.0228
+2023/04/22 02:15:09 - mmengine - INFO - Iter(train) [22100/30000]  lr: 1.6168e-06  eta: 1:27:19  time: 0.6588  data_time: 0.3746  memory: 6456  loss: 0.0228
+2023/04/22 02:16:15 - mmengine - INFO - Iter(train) [22200/30000]  lr: 1.5785e-06  eta: 1:26:12  time: 0.6594  data_time: 0.3766  memory: 6456  loss: 0.0231
+2023/04/22 02:17:21 - mmengine - INFO - Iter(train) [22300/30000]  lr: 1.5405e-06  eta: 1:25:06  time: 0.6584  data_time: 0.3726  memory: 6456  loss: 0.0224
+2023/04/22 02:18:27 - mmengine - INFO - Iter(train) [22400/30000]  lr: 1.5029e-06  eta: 1:23:59  time: 0.6565  data_time: 0.3716  memory: 6456  loss: 0.0228
+2023/04/22 02:19:32 - mmengine - INFO - Iter(train) [22500/30000]  lr: 1.4657e-06  eta: 1:22:53  time: 0.6576  data_time: 0.3711  memory: 6456  loss: 0.0230
+2023/04/22 02:20:37 - mmengine - INFO - Iter(train) [22600/30000]  lr: 1.4289e-06  eta: 1:21:46  time: 0.6495  data_time: 0.3645  memory: 6456  loss: 0.0228
+2023/04/22 02:21:44 - mmengine - INFO - Iter(train) [22700/30000]  lr: 1.3924e-06  eta: 1:20:40  time: 0.6655  data_time: 0.3793  memory: 6456  loss: 0.0229
+2023/04/22 02:22:49 - mmengine - INFO - Iter(train) [22800/30000]  lr: 1.3564e-06  eta: 1:19:33  time: 0.6557  data_time: 0.3702  memory: 6456  loss: 0.0230
+2023/04/22 02:23:56 - mmengine - INFO - Iter(train) [22900/30000]  lr: 1.3207e-06  eta: 1:18:27  time: 0.6649  data_time: 0.3807  memory: 6456  loss: 0.0229
+2023/04/22 02:25:03 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/22 02:25:03 - mmengine - INFO - Iter(train) [23000/30000]  lr: 1.2855e-06  eta: 1:17:21  time: 0.6737  data_time: 0.3888  memory: 6456  loss: 0.0226
+2023/04/22 02:26:09 - mmengine - INFO - Iter(train) [23100/30000]  lr: 1.2507e-06  eta: 1:16:15  time: 0.6591  data_time: 0.3733  memory: 6456  loss: 0.0230
+2023/04/22 02:27:16 - mmengine - INFO - Iter(train) [23200/30000]  lr: 1.2162e-06  eta: 1:15:08  time: 0.6628  data_time: 0.3804  memory: 6456  loss: 0.0231
+2023/04/22 02:28:22 - mmengine - INFO - Iter(train) [23300/30000]  lr: 1.1822e-06  eta: 1:14:02  time: 0.6638  data_time: 0.3810  memory: 6456  loss: 0.0227
+2023/04/22 02:29:29 - mmengine - INFO - Iter(train) [23400/30000]  lr: 1.1487e-06  eta: 1:12:56  time: 0.6674  data_time: 0.3824  memory: 6456  loss: 0.0225
+2023/04/22 02:30:35 - mmengine - INFO - Iter(train) [23500/30000]  lr: 1.1155e-06  eta: 1:11:50  time: 0.6625  data_time: 0.3772  memory: 6456  loss: 0.0230
+2023/04/22 02:31:41 - mmengine - INFO - Iter(train) [23600/30000]  lr: 1.0827e-06  eta: 1:10:43  time: 0.6599  data_time: 0.3756  memory: 6456  loss: 0.0227
+2023/04/22 02:32:47 - mmengine - INFO - Iter(train) [23700/30000]  lr: 1.0504e-06  eta: 1:09:37  time: 0.6610  data_time: 0.3773  memory: 6456  loss: 0.0230
+2023/04/22 02:33:54 - mmengine - INFO - Iter(train) [23800/30000]  lr: 1.0186e-06  eta: 1:08:30  time: 0.6652  data_time: 0.3812  memory: 6456  loss: 0.0230
+2023/04/22 02:35:00 - mmengine - INFO - Iter(train) [23900/30000]  lr: 9.8713e-07  eta: 1:07:24  time: 0.6639  data_time: 0.3777  memory: 6456  loss: 0.0227
+2023/04/22 02:36:05 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/22 02:36:05 - mmengine - INFO - Iter(train) [24000/30000]  lr: 9.5613e-07  eta: 1:06:18  time: 0.6494  data_time: 0.3657  memory: 6456  loss: 0.0230
+2023/04/22 02:37:11 - mmengine - INFO - Iter(train) [24100/30000]  lr: 9.2557e-07  eta: 1:05:11  time: 0.6604  data_time: 0.3752  memory: 6456  loss: 0.0231
+2023/04/22 02:38:16 - mmengine - INFO - Iter(train) [24200/30000]  lr: 8.9546e-07  eta: 1:04:05  time: 0.6531  data_time: 0.3659  memory: 6456  loss: 0.0229
+2023/04/22 02:39:23 - mmengine - INFO - Iter(train) [24300/30000]  lr: 8.6580e-07  eta: 1:02:58  time: 0.6619  data_time: 0.3779  memory: 6456  loss: 0.0228
+2023/04/22 02:40:29 - mmengine - INFO - Iter(train) [24400/30000]  lr: 8.3660e-07  eta: 1:01:52  time: 0.6636  data_time: 0.3814  memory: 6456  loss: 0.0229
+2023/04/22 02:41:35 - mmengine - INFO - Iter(train) [24500/30000]  lr: 8.0785e-07  eta: 1:00:46  time: 0.6605  data_time: 0.3817  memory: 6456  loss: 0.0230
+2023/04/22 02:42:41 - mmengine - INFO - Iter(train) [24600/30000]  lr: 7.7956e-07  eta: 0:59:39  time: 0.6646  data_time: 0.3789  memory: 6456  loss: 0.0230
+2023/04/22 02:43:46 - mmengine - INFO - Iter(train) [24700/30000]  lr: 7.5174e-07  eta: 0:58:33  time: 0.6481  data_time: 0.3642  memory: 6456  loss: 0.0229
+2023/04/22 02:44:52 - mmengine - INFO - Iter(train) [24800/30000]  lr: 7.2438e-07  eta: 0:57:26  time: 0.6562  data_time: 0.3710  memory: 6456  loss: 0.0229
+2023/04/22 02:45:58 - mmengine - INFO - Iter(train) [24900/30000]  lr: 6.9749e-07  eta: 0:56:20  time: 0.6614  data_time: 0.3790  memory: 6456  loss: 0.0225
+2023/04/22 02:47:03 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/22 02:47:03 - mmengine - INFO - Iter(train) [25000/30000]  lr: 6.7107e-07  eta: 0:55:14  time: 0.6521  data_time: 0.3671  memory: 6456  loss: 0.0230
+2023/04/22 02:47:03 - mmengine - INFO - Saving checkpoint at 25000 iterations
+2023/04/22 02:47:22 - mmengine - INFO - Iter(val) [100/400]    eta: 0:00:52  time: 0.1759  data_time: 0.0444  memory: 235  
+2023/04/22 02:47:38 - mmengine - INFO - Iter(val) [200/400]    eta: 0:00:33  time: 0.1624  data_time: 0.0374  memory: 235  
+2023/04/22 02:47:54 - mmengine - INFO - Iter(val) [300/400]    eta: 0:00:16  time: 0.1613  data_time: 0.0378  memory: 235  
+2023/04/22 02:48:11 - mmengine - INFO - Iter(val) [400/400]    eta: 0:00:00  time: 0.1623  data_time: 0.0378  memory: 235  
+2023/04/22 02:48:11 - mmengine - INFO - Iter(val) [400/400]    PSNR: 29.7315  SSIM: 0.8041  data_time: 0.0378  time: 0.1623
+2023/04/22 02:48:11 - mmengine - INFO - The previous best checkpoint ./work_dirs/srresnet/best_PSNR_iter_20000.pth is removed
+2023/04/22 02:48:11 - mmengine - INFO - The best checkpoint with 29.7315 PSNR at 25000 iter is saved to best_PSNR_iter_25000.pth.
+2023/04/22 02:49:16 - mmengine - INFO - Iter(train) [25100/30000]  lr: 6.4512e-07  eta: 0:54:07  time: 0.6572  data_time: 0.3744  memory: 6456  loss: 0.0230
+2023/04/22 02:50:23 - mmengine - INFO - Iter(train) [25200/30000]  lr: 6.1966e-07  eta: 0:53:01  time: 0.6687  data_time: 0.3830  memory: 6456  loss: 0.0226
+2023/04/22 02:51:28 - mmengine - INFO - Iter(train) [25300/30000]  lr: 5.9467e-07  eta: 0:51:55  time: 0.6518  data_time: 0.3674  memory: 6456  loss: 0.0229
+2023/04/22 02:52:34 - mmengine - INFO - Iter(train) [25400/30000]  lr: 5.7017e-07  eta: 0:50:48  time: 0.6581  data_time: 0.3706  memory: 6456  loss: 0.0229
+2023/04/22 02:53:40 - mmengine - INFO - Iter(train) [25500/30000]  lr: 5.4615e-07  eta: 0:49:42  time: 0.6582  data_time: 0.3747  memory: 6456  loss: 0.0227
+2023/04/22 02:54:46 - mmengine - INFO - Iter(train) [25600/30000]  lr: 5.2262e-07  eta: 0:48:35  time: 0.6587  data_time: 0.3749  memory: 6456  loss: 0.0231
+2023/04/22 02:55:52 - mmengine - INFO - Iter(train) [25700/30000]  lr: 4.9958e-07  eta: 0:47:29  time: 0.6633  data_time: 0.3765  memory: 6456  loss: 0.0234
+2023/04/22 02:56:58 - mmengine - INFO - Iter(train) [25800/30000]  lr: 4.7704e-07  eta: 0:46:23  time: 0.6587  data_time: 0.3732  memory: 6456  loss: 0.0227
+2023/04/22 02:58:04 - mmengine - INFO - Iter(train) [25900/30000]  lr: 4.5499e-07  eta: 0:45:17  time: 0.6592  data_time: 0.3740  memory: 6456  loss: 0.0227
+2023/04/22 02:59:10 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/22 02:59:10 - mmengine - INFO - Iter(train) [26000/30000]  lr: 4.3344e-07  eta: 0:44:10  time: 0.6559  data_time: 0.3727  memory: 6456  loss: 0.0230
+2023/04/22 03:00:16 - mmengine - INFO - Iter(train) [26100/30000]  lr: 4.1239e-07  eta: 0:43:04  time: 0.6640  data_time: 0.3814  memory: 6456  loss: 0.0225
+2023/04/22 03:01:21 - mmengine - INFO - Iter(train) [26200/30000]  lr: 3.9185e-07  eta: 0:41:58  time: 0.6529  data_time: 0.3691  memory: 6456  loss: 0.0231
+2023/04/22 03:02:27 - mmengine - INFO - Iter(train) [26300/30000]  lr: 3.7181e-07  eta: 0:40:51  time: 0.6500  data_time: 0.3640  memory: 6456  loss: 0.0230
+2023/04/22 03:03:33 - mmengine - INFO - Iter(train) [26400/30000]  lr: 3.5228e-07  eta: 0:39:45  time: 0.6599  data_time: 0.3750  memory: 6456  loss: 0.0228
+2023/04/22 03:04:38 - mmengine - INFO - Iter(train) [26500/30000]  lr: 3.3325e-07  eta: 0:38:38  time: 0.6559  data_time: 0.3692  memory: 6456  loss: 0.0229
+2023/04/22 03:05:43 - mmengine - INFO - Iter(train) [26600/30000]  lr: 3.1474e-07  eta: 0:37:32  time: 0.6469  data_time: 0.3593  memory: 6456  loss: 0.0227
+2023/04/22 03:06:50 - mmengine - INFO - Iter(train) [26700/30000]  lr: 2.9674e-07  eta: 0:36:26  time: 0.6677  data_time: 0.3824  memory: 6456  loss: 0.0229
+2023/04/22 03:07:53 - mmengine - INFO - Iter(train) [26800/30000]  lr: 2.7926e-07  eta: 0:35:19  time: 0.6390  data_time: 0.3542  memory: 6456  loss: 0.0233
+2023/04/22 03:08:59 - mmengine - INFO - Iter(train) [26900/30000]  lr: 2.6230e-07  eta: 0:34:13  time: 0.6527  data_time: 0.3655  memory: 6456  loss: 0.0229
+2023/04/22 03:10:04 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/22 03:10:04 - mmengine - INFO - Iter(train) [27000/30000]  lr: 2.4585e-07  eta: 0:33:07  time: 0.6552  data_time: 0.3694  memory: 6456  loss: 0.0230
+2023/04/22 03:11:10 - mmengine - INFO - Iter(train) [27100/30000]  lr: 2.2993e-07  eta: 0:32:00  time: 0.6526  data_time: 0.3682  memory: 6456  loss: 0.0228
+2023/04/22 03:12:16 - mmengine - INFO - Iter(train) [27200/30000]  lr: 2.1453e-07  eta: 0:30:54  time: 0.6609  data_time: 0.3765  memory: 6456  loss: 0.0231
+2023/04/22 03:13:21 - mmengine - INFO - Iter(train) [27300/30000]  lr: 1.9966e-07  eta: 0:29:48  time: 0.6566  data_time: 0.3696  memory: 6456  loss: 0.0226
+2023/04/22 03:14:26 - mmengine - INFO - Iter(train) [27400/30000]  lr: 1.8531e-07  eta: 0:28:41  time: 0.6513  data_time: 0.3636  memory: 6456  loss: 0.0226
+2023/04/22 03:15:32 - mmengine - INFO - Iter(train) [27500/30000]  lr: 1.7149e-07  eta: 0:27:35  time: 0.6504  data_time: 0.3647  memory: 6456  loss: 0.0229
+2023/04/22 03:16:37 - mmengine - INFO - Iter(train) [27600/30000]  lr: 1.5820e-07  eta: 0:26:29  time: 0.6508  data_time: 0.3622  memory: 6456  loss: 0.0231
+2023/04/22 03:17:43 - mmengine - INFO - Iter(train) [27700/30000]  lr: 1.4544e-07  eta: 0:25:23  time: 0.6617  data_time: 0.3753  memory: 6456  loss: 0.0226
+2023/04/22 03:18:49 - mmengine - INFO - Iter(train) [27800/30000]  lr: 1.3321e-07  eta: 0:24:16  time: 0.6569  data_time: 0.3696  memory: 6456  loss: 0.0229
+2023/04/22 03:19:54 - mmengine - INFO - Iter(train) [27900/30000]  lr: 1.2152e-07  eta: 0:23:10  time: 0.6564  data_time: 0.3669  memory: 6456  loss: 0.0229
+2023/04/22 03:21:00 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/22 03:21:00 - mmengine - INFO - Iter(train) [28000/30000]  lr: 1.1036e-07  eta: 0:22:04  time: 0.6531  data_time: 0.3667  memory: 6456  loss: 0.0232
+2023/04/22 03:22:05 - mmengine - INFO - Iter(train) [28100/30000]  lr: 9.9738e-08  eta: 0:20:57  time: 0.6561  data_time: 0.3728  memory: 6456  loss: 0.0228
+2023/04/22 03:23:10 - mmengine - INFO - Iter(train) [28200/30000]  lr: 8.9653e-08  eta: 0:19:51  time: 0.6448  data_time: 0.3595  memory: 6456  loss: 0.0230
+2023/04/22 03:24:14 - mmengine - INFO - Iter(train) [28300/30000]  lr: 8.0107e-08  eta: 0:18:45  time: 0.6452  data_time: 0.3593  memory: 6456  loss: 0.0229
+2023/04/22 03:25:19 - mmengine - INFO - Iter(train) [28400/30000]  lr: 7.1100e-08  eta: 0:17:39  time: 0.6475  data_time: 0.3633  memory: 6456  loss: 0.0236
+2023/04/22 03:26:23 - mmengine - INFO - Iter(train) [28500/30000]  lr: 6.2634e-08  eta: 0:16:32  time: 0.6416  data_time: 0.3577  memory: 6456  loss: 0.0229
+2023/04/22 03:27:28 - mmengine - INFO - Iter(train) [28600/30000]  lr: 5.4709e-08  eta: 0:15:26  time: 0.6531  data_time: 0.3680  memory: 6456  loss: 0.0228
+2023/04/22 03:28:35 - mmengine - INFO - Iter(train) [28700/30000]  lr: 4.7327e-08  eta: 0:14:20  time: 0.6651  data_time: 0.3795  memory: 6456  loss: 0.0228
+2023/04/22 03:29:41 - mmengine - INFO - Iter(train) [28800/30000]  lr: 4.0488e-08  eta: 0:13:14  time: 0.6638  data_time: 0.3801  memory: 6456  loss: 0.0232
+2023/04/22 03:30:50 - mmengine - INFO - Iter(train) [28900/30000]  lr: 3.4193e-08  eta: 0:12:08  time: 0.6862  data_time: 0.3990  memory: 6456  loss: 0.0226
+2023/04/22 03:31:57 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/22 03:31:57 - mmengine - INFO - Iter(train) [29000/30000]  lr: 2.8443e-08  eta: 0:11:01  time: 0.6723  data_time: 0.3839  memory: 6456  loss: 0.0231
+2023/04/22 03:33:06 - mmengine - INFO - Iter(train) [29100/30000]  lr: 2.3237e-08  eta: 0:09:55  time: 0.6832  data_time: 0.3953  memory: 6456  loss: 0.0228
+2023/04/22 03:34:13 - mmengine - INFO - Iter(train) [29200/30000]  lr: 1.8578e-08  eta: 0:08:49  time: 0.6706  data_time: 0.3842  memory: 6456  loss: 0.0229
+2023/04/22 03:35:19 - mmengine - INFO - Iter(train) [29300/30000]  lr: 1.4465e-08  eta: 0:07:43  time: 0.6602  data_time: 0.3742  memory: 6456  loss: 0.0229
+2023/04/22 03:36:26 - mmengine - INFO - Iter(train) [29400/30000]  lr: 1.0898e-08  eta: 0:06:37  time: 0.6723  data_time: 0.3859  memory: 6456  loss: 0.0227
+2023/04/22 03:37:33 - mmengine - INFO - Iter(train) [29500/30000]  lr: 7.8791e-09  eta: 0:05:31  time: 0.6716  data_time: 0.3828  memory: 6456  loss: 0.0228
+2023/04/22 03:38:41 - mmengine - INFO - Iter(train) [29600/30000]  lr: 5.4074e-09  eta: 0:04:24  time: 0.6746  data_time: 0.3864  memory: 6456  loss: 0.0232
+2023/04/22 03:39:48 - mmengine - INFO - Iter(train) [29700/30000]  lr: 3.4834e-09  eta: 0:03:18  time: 0.6756  data_time: 0.3850  memory: 6456  loss: 0.0229
+2023/04/22 03:40:55 - mmengine - INFO - Iter(train) [29800/30000]  lr: 2.1075e-09  eta: 0:02:12  time: 0.6647  data_time: 0.3804  memory: 6456  loss: 0.0233
+2023/04/22 03:42:03 - mmengine - INFO - Iter(train) [29900/30000]  lr: 1.2796e-09  eta: 0:01:06  time: 0.6815  data_time: 0.3979  memory: 6456  loss: 0.0229
+2023/04/22 03:43:11 - mmengine - INFO - Exp name: srresnet_20230421_220611
+2023/04/22 03:43:11 - mmengine - INFO - Iter(train) [30000/30000]  lr: 1.0000e-09  eta: 0:00:00  time: 0.6773  data_time: 0.3902  memory: 6456  loss: 0.0231
+2023/04/22 03:43:11 - mmengine - INFO - Saving checkpoint at 30000 iterations
+2023/04/22 03:43:31 - mmengine - INFO - Iter(val) [100/400]    eta: 0:00:58  time: 0.1943  data_time: 0.0471  memory: 235  
+2023/04/22 03:43:49 - mmengine - INFO - Iter(val) [200/400]    eta: 0:00:37  time: 0.1809  data_time: 0.0380  memory: 235  
+2023/04/22 03:44:08 - mmengine - INFO - Iter(val) [300/400]    eta: 0:00:18  time: 0.1833  data_time: 0.0389  memory: 235  
+2023/04/22 03:44:26 - mmengine - INFO - Iter(val) [400/400]    eta: 0:00:00  time: 0.1823  data_time: 0.0388  memory: 235  
+2023/04/22 03:44:26 - mmengine - INFO - Iter(val) [400/400]    PSNR: 29.7299  SSIM: 0.8041  data_time: 0.0388  time: 0.1823
+2023/04/22 03:44:26 - mmengine - INFO - Log saved under /home/msai/ywang150/AI6126_project_2/work_dirs/srresnet/20230421_220611
+2023/04/22 03:44:26 - mmengine - INFO - Checkpoint saved under ./work_dirs/srresnet
