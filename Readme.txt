@@ -11,6 +11,7 @@ CodaLab username: YuYue525
 6. mmediting_v1.0: the folder contains msrresnet train and test configration file
 7. mmediting_v0.0: the folder contains srgan and its msrresnet configration file, train and test script
 8. CodaLab.png : Screenshot on CodaLab of the score achieved
+9. test_real_results: contains results of the six real test images
 
 --- Third-party libraries ---
 1. torch
